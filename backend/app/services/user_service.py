@@ -1,0 +1,111 @@
+from app.common.exceptions import BusinessException
+from app.models.user import User
+from app.schemas.user import (
+    PasswordUpdateRequest,
+    UserCreateRequest,
+    UserResponse,
+    UserUpdateRequest,
+)
+from sqlalchemy.orm import Session
+from app.common.response import PageResponse
+from operator import or_
+from app.utils.password import hash_password, verify_password
+
+
+def get_user_info(user: User) -> UserResponse:
+    """获取当前登录用户信息"""
+    return UserResponse.model_validate(user)
+
+
+def update_user_info(db: Session, user: User, data: UserUpdateRequest):
+    """更新当前用户信息"""
+    user_dict = data.model_dump(
+        exclude_none=True, exclude={"role", "status"}
+    )  # pydatic对象转换成字典
+    # exclude_none=True 表示排除值为 None 的字段，exclude={"role", "status"} 表示排除 role 和 status 字段。
+    for field, value in user_dict.items():
+        setattr(user, field, value)
+    db.commit()
+    db.refresh(user)
+    return UserResponse.model_validate(user)
+
+
+def update_password(db: Session, user: User, data: PasswordUpdateRequest):
+    """修改当前用户密码"""
+    if not verify_password(data.old_password, user.password):
+        raise BusinessException(message="原密码错误")
+    if data.old_password == data.new_password:
+        raise BusinessException(message="新密码不能与原密码相同")
+    user.password = hash_password(data.new_password)
+    db.commit()
+
+
+def get_user_page_list(
+    db: Session, page: int, page_size: int, keywords: str | None = None
+):  # page: 当前页码，page_size: 每页最多取多少条
+    """分页模糊查询用户列表"""
+    # select * from user where username like '%张%' or name like '%张%';
+    query = db.query(User)
+    if keywords:
+        query = query.filter(
+            or_(User.username.ilike(f"%{keywords}%"), User.name.ilike(f"%{keywords}%"))
+        )  # or_:两个条件满足其一即可
+    total = query.count()  # 获取总记录数
+    items = (
+        query.order_by(User.id.desc())  #  按 User.id 从大到小排序
+        .offset(
+            (page - 1) * page_size
+        )  # 跳过前面页面的记录。比如第 2 页、每页 10 条，就跳过 10 条。
+        .limit(page_size)  # 最多取 page_size 条记录
+        .all()  # 执行查询，并把结果作为列表返回。
+    )  # 返回分页结果，包含用户列表和总记录数
+    return PageResponse(
+        list=[UserResponse.model_validate(item) for item in items], total=total
+    )
+
+
+def create_user(db: Session, data: UserCreateRequest):
+    """新增用户"""
+    exist = db.query(User).filter(User.username == data.username).first()
+    if exist:
+        raise BusinessException(message="账号已存在")
+    user = User(
+        username=data.username,
+        password=hash_password(data.password),
+        name=data.name,
+        role=data.role,
+        email=data.email,
+        phone=data.phone,
+        avatar=data.avatar,
+        status=data.status,
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return UserResponse.model_validate(user)
+
+
+def update_user(db: Session, user_id: int, data: UserUpdateRequest):
+    """更新用户"""
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise BusinessException(message="用户不存在")
+    payload = data.model_dump(exclude_none=True)
+    # model_dump() 方法将 Pydantic 模型对象转换为字典，exclude_none=True 表示排除值为 None 的字段。
+    for filed, value in payload.items():
+        setattr(user, filed, value)
+        # setattr() 函数用于设置对象的属性值，这里将 payload 字典中的每个字段和值设置到 user 对象中。
+    db.commit()
+    db.refresh(user)
+    return UserResponse.model_validate(user)
+
+
+def delete_user(db: Session, user_id: int, currut_user: User):
+    """删除用户"""
+    if user_id == currut_user.id:
+        raise BusinessException(message="不能删除当前登录的账号")
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise BusinessException(message="用户不存在")
+    db.delete(user)
+    db.commit()

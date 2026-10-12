@@ -1,0 +1,46 @@
+# ---------- 密钥与本地环境（最重要：绝不能提交）----------
+.env
+.env.*
+!.env.example
+
+# ---------- 虚拟环境 ----------
+.venv/
+venv/
+env/
+ENV/
+
+# ---------- Python ----------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# ---------- Node / 前端 ----------
+node_modules/
+dist/
+dist-ssr/
+*.local
+*.tsbuildinfo
+.eslintcache
+
+# ---------- 运行期产物（可重建，不入库）----------
+backend/uploads/
+backend/data/chroma/
+backend/data/*.pkl
+*.log
+logs/
+
+# ---------- IDE / 操作系统 ----------
+.idea/
+.vscode/*
+!.vscode/extensions.json
+.DS_Store
+Thumbs.db
+
+# ---------- 个人材料不随代码公开 ----------
+resume/
