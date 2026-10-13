@@ -1,6 +1,6 @@
 import traceback
-
 from openai import OpenAI
+import httpx
 from app.common.exceptions import BusinessException
 from app.config import settings
 from app.schemas.ai import ChatMessage, ChatRequest
@@ -149,7 +149,12 @@ def get_client() -> OpenAI:
     """创建OPENAI的客户端"""
     if not settings.LLM_API_KEY:
         raise BusinessException(message="未获取到大模型的API Key")
-    return OpenAI(api_key=settings.LLM_API_KEY, base_url=settings.LLM_BASE_URL)
+    # return OpenAI(api_key=settings.LLM_API_KEY, base_url=settings.LLM_BASE_URL)
+    return OpenAI(
+        api_key=settings.LLM_API_KEY,
+        base_url=settings.LLM_BASE_URL,
+        http_client=httpx.Client(trust_env=False),  # 同上：不读代理环境变量
+    )
 
 
 def chat(db: Session, data: ChatRequest):

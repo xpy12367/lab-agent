@@ -42,11 +42,16 @@ async def lifespan(app: FastAPI):
     task = asyncio.create_task(
         reservation_service.run_expire_scan()
     )  # 启动项目开启异步的扫描任务
+    try:
+        # yield 处：应用正式开始对外提供服务，程序会一直停在这里
+        yield
 
-    # yield 处：应用正式开始对外提供服务，程序会一直停在这里
-    yield
-
-    task.cancel()  # 关闭项目同时取消异步任务
+    finally:
+        # 关闭项目时：取消后台任务
+        task.cancel()  # 关闭项目同时取消异步任务
+        await asyncio.gather(
+            task, return_exceptions=True
+        )  # 取消任务,不再把CanceledError抛给lifespan
 
 
 # 全局唯一的 FastAPI 实例（只能创建一次，重复创建会丢掉已注册的路由）

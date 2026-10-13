@@ -34,6 +34,12 @@ backend/data/chroma/
 backend/data/*.pkl
 *.log
 logs/
+uvicorn_console.txt
+backend/uvicorn_console.txt
+
+# ---------- 临时诊断脚本（本地排查用，勿入库）----------
+_diag_*.py
+backend/_diag_*.py
 
 # ---------- IDE / 操作系统 ----------
 .idea/

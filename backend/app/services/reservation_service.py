@@ -163,12 +163,22 @@ def expire_pending_reservations():
 async def run_expire_scan():
     """一分钟扫描一次取消预约业务"""
     # 后台常驻任务：不断循环扫描并处理已过期的预约
-    while True:
-        try:
-            # 执行一次过期扫描，把超时的待处理预约标记为已过期
-            expire_pending_reservations()
-        except Exception as e:
-            print(f"过期扫描失败: {e}")
+    try:
+        while True:
+            await asyncio.to_thread(
+                expire_pending_reservations()
+            )  # 调用同步函数    to_thread：别阻塞事件循环
+            await asyncio.sleep(60)  # await 表示「在这里等待，但等待期间不影响别人」。
 
-        # 异步休眠 60 秒，让出事件循环，避免阻塞其他请求
-        await asyncio.sleep(60)  # await 表示「在这里等待，但等待期间不影响别人」。
+    except asyncio.CancelledError:
+        return
+
+    # while True:
+    #     try:
+    #         # 执行一次过期扫描，把超时的待处理预约标记为已过期
+    #         expire_pending_reservations()
+    #     except Exception as e:
+    #         print(f"过期扫描失败: {e}")
+
+    #     # 异步休眠 60 秒，让出事件循环，避免阻塞其他请求
+    #     await asyncio.sleep(60)  # await 表示「在这里等待，但等待期间不影响别人」。
