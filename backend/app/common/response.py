@@ -9,11 +9,11 @@ class Response(BaseModel):
     message: str
     data: Any = None
 
-    @classmethod
+    @classmethod  # 类方法，用于创建成功响应
     def success(cls, message: str = "请求成功", data: Any = None):
         return cls(code=200, message=message, data=data)
 
-    @classmethod
+    @classmethod  # 类方法，用于创建错误响应
     def error(cls, code: int = 500, message: str = "请求失败"):
         return cls(code=code, message=message)
 

@@ -115,6 +115,7 @@ def search(query: str):
     print(f"检索出来的 score_parts：{score_parts}")
     # 按相似度从高到低排序，保证最相关的排前面
     score_parts.sort(key=lambda x: x["score"], reverse=True)  # reverse=True:倒序排序
+    # key=lambda x: x["score"]:表示拿每个元素的 score 字段当排序依据。
     # 只取前 2 条拼成最终上下文返回
     final_parts = [item["content"] for item in score_parts[:2]]
     return "\n\n".join(final_parts)

@@ -52,7 +52,7 @@ def _chunk_text(chunk: Any) -> str:
     # chunk 可能是 AIMessageChunk，真正字在 .content
     content = getattr(
         chunk, "content", None
-    )  # 用字符串名字(chunk)去取对象("content")的属性,没有就返回None。
+    )  # 用字符串名字("content")去取对象(chunk)的属性,没有就返回None。
     if isinstance(content, str):
         return content
     if isinstance(content, list):
@@ -106,7 +106,7 @@ async def stream_agent(db: Session, current_user: User, data: ChatRequest):
             version="v2",
             config={"recursion_limit": 10},  # agent⇄tools 来回上限，防空转
         ):
-            print("event:", event.get("event"),event.get("name"))
+            print("event:", event.get("event"), event.get("name"))
             kind = event.get("event")  # 事件类型
             if kind == "on_tool_start":  # 工具调用开始
                 name = event.get("name") or ""  # 工具英文名

@@ -12,6 +12,7 @@ class BusinessException(Exception):
         self.message = message
         self.code = code
         super().__init__(message)
+        # 初始化异常，设置异常信息和状态码。
 
 
 async def bussiness_excpetion_hadler(request: Request, exc: BusinessException):

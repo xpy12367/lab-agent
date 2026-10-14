@@ -33,7 +33,9 @@ Base.metadata.create_all(bind=engine)  # 自动帮我们创建数据库和数据
 async def lifespan(app: FastAPI):
     # 预热向量库：模型加载（约 15s）挪到启动阶段，避免首个请求超过前端 30s 超时
     try:
-        await asyncio.to_thread(kb_service.warmup)  # to_thread：别阻塞事件循环
+        await asyncio.to_thread(kb_service.warmup)  # 别阻塞事件循环
+        # asyncio.to_thread(...):放到另一个线程里执行，并返回一个可等待的对象
+        # await：在这里等它结束，把控制权交还给事件循环。
     except Exception:
         traceback.print_exc()
 
@@ -44,14 +46,15 @@ async def lifespan(app: FastAPI):
     )  # 启动项目开启异步的扫描任务
     try:
         # yield 处：应用正式开始对外提供服务，程序会一直停在这里
-        yield
+        yield  # 相当于分界线,程序会一直停在这里，直到应用被关闭（Ctrl+C / 部署重启）
 
     finally:
         # 关闭项目时：取消后台任务
         task.cancel()  # 关闭项目同时取消异步任务
         await asyncio.gather(
             task, return_exceptions=True
-        )  # 取消任务,不再把CanceledError抛给lifespan
+        )  # await gather(...) 让关闭流程卡在这里等它退干净再继续。
+        # 取消任务,不再把CanceledError抛给lifespan
 
 
 # 全局唯一的 FastAPI 实例（只能创建一次，重复创建会丢掉已注册的路由）

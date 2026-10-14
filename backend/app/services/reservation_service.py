@@ -150,7 +150,7 @@ def expire_pending_reservations():
             # 如果预约日期早于今天，或者当天已到结束时间，则视为已过期
             if item.date < today or (item.date == today and item.end_time <= now_time):
                 item.status = 3  # 将状态更新为已过期（按业务约定 status=3 表示过期）
-                changed = True
+                changed = True  # 标记有更新发生
 
         # 只在确实有更新时提交事务，避免无意义的数据库写入
         if changed:

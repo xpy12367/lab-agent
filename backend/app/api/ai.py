@@ -34,7 +34,8 @@ async def chat_stream(
         async for event in agent_service.stream_agent(db, current_user, data):
             yield _sse_line(event)
 
-    return StreamingResponse(
+    return StreamingResponse(  
+        # StreamingResponse:不必等所有内容都生成完再一次性返回，而是可以边生成、边发送给客户端。
         event_gen(),
         media_type="text/event-stream",  # 告诉浏览器这是 SSE 流
         headers={

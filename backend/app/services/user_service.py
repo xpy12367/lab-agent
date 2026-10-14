@@ -15,6 +15,7 @@ from app.utils.password import hash_password, verify_password
 def get_user_info(user: User) -> UserResponse:
     """获取当前登录用户信息"""
     return UserResponse.model_validate(user)
+    # model_validate()：把数据库对象转换成 UserResponse 模型。
 
 
 def update_user_info(db: Session, user: User, data: UserUpdateRequest):
@@ -24,7 +25,7 @@ def update_user_info(db: Session, user: User, data: UserUpdateRequest):
     )  # pydatic对象转换成字典
     # exclude_none=True 表示排除值为 None 的字段，exclude={"role", "status"} 表示排除 role 和 status 字段。
     for field, value in user_dict.items():
-        setattr(user, field, value)
+        setattr(user, field, value)  # 把 value 这个值，设置到 user 对象中名为 field 的属性上
     db.commit()
     db.refresh(user)
     return UserResponse.model_validate(user)
